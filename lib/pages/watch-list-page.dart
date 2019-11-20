@@ -11,7 +11,7 @@ class WatchListPage extends StatelessWidget {
 
     return Scaffold(
 
-      body: MovieListWidget(stream: bloc.outWatch, listName: 'watch')
+      body: MovieListWidget(stream: bloc.outWatch)
     );
   }
 }

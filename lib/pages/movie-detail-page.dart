@@ -4,16 +4,15 @@ import 'package:achernyak_app/blocs/watch_list_bloc.dart';
 import 'package:achernyak_app/blocs/watched_list_bloc.dart';
 import 'package:achernyak_app/models/movie_card.dart';
 import 'package:flutter/material.dart';
+import 'package:rxdart/rxdart.dart';
 
 class MovieDetailsPage extends StatefulWidget {
   const MovieDetailsPage({
     Key key,
-    this.movieCard,
-    this.listName,
+    this.movieCard
   }) : super(key: key);
 
   final MovieCard movieCard;
-  final String listName;
 
   @override
   _MovieDetailsPageState createState() => _MovieDetailsPageState();
@@ -21,20 +20,25 @@ class MovieDetailsPage extends StatefulWidget {
 
 class _MovieDetailsPageState extends State<MovieDetailsPage> {
   final List<String> genresList = <String>[];
-  dynamic _bloc;
-  dynamic _blocWatched;
-
+  WatchListBloc _bloc;
+  WatchedListBloc _blocWatched;
 
   @override
   void didChangeDependencies() {
     _bloc = BlocProvider.of<WatchListBloc>(context);
     _blocWatched = BlocProvider.of<WatchedListBloc>(context);
+
     super.didChangeDependencies();
   }
 
   @override
   void dispose() {
     super.dispose();
+  }
+
+  Stream<List<List<MovieCard>>> getMergetStream() {
+
+    return Observable.combineLatest2(_bloc.outWatch, _blocWatched.outWatch, (List<MovieCard> a, List<MovieCard> b) => [a, b]);
   }
 
   @override
@@ -56,31 +60,38 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
       );
     }
 
-    List<Widget> _buildButtons(String name) {
-      List<Widget> list = [];
-      if(name == 'watch') {
-        list.add(_buttonBuilder('Already Watched', () {
-          _blocWatched.inAddWatch.add(widget.movieCard);
-        }));
+    List<Widget> _buildButtons(List<List<MovieCard>> snapshot) {
+      final List<Widget> list = [];
+      if(snapshot == null) {
+        return [];
+      }
 
-        list.add(_buttonBuilder('Remove', () {
-          _bloc.inRemoveWatch.add(widget.movieCard);
-        }));
-      } else if (name == 'watched') {
+      final bool inWatch = snapshot[0].indexWhere((MovieCard item) => item.id == widget.movieCard.id) > -1;
+      final bool inWatched = snapshot[1].indexWhere((MovieCard item) => item.id == widget.movieCard.id) > -1;
+
+      if (!inWatch) {
         list.add(_buttonBuilder('Add to WatchList', () {
           _bloc.inAddWatch.add(widget.movieCard);
-        }));
-
-        list.add(_buttonBuilder('Remove', () {
           _blocWatched.inRemoveWatch.add(widget.movieCard);
         }));
-      } else {
-        list.add(_buttonBuilder('Add to WatchList', () {
-          _bloc.inAddWatch.add(widget.movieCard);
-        }));
+      }
+
+      if(!inWatched) {
         list.add(_buttonBuilder('Already Watched', () {
           _blocWatched.inAddWatch.add(widget.movieCard);
-          
+          _bloc.inRemoveWatch.add(widget.movieCard);
+        }));
+      }
+
+      if(inWatch) {
+        list.add(_buttonBuilder('Remove Watch', () {
+            _bloc.inRemoveWatch.add(widget.movieCard);
+        }));
+      }
+
+      if(inWatched) {
+        list.add(_buttonBuilder('Remove Watched', () {
+          _blocWatched.inRemoveWatch.add(widget.movieCard);
         }));
       }
 
@@ -160,14 +171,19 @@ class _MovieDetailsPageState extends State<MovieDetailsPage> {
                   ],
                 ),
                 Container(margin: const EdgeInsets.only(top: 8.0, bottom: 8.0)),
-                Column(
+                StreamBuilder<List<List<MovieCard>>>(
+                  stream: getMergetStream(),
+                  builder: (BuildContext context, AsyncSnapshot<List<List<MovieCard>>> snapshot) {
+              
+                return Column(
                   children: <Widget>[
                     ButtonBar(
                       alignment: MainAxisAlignment.center,
-                      children: _buildButtons(widget.listName),
+                      children: _buildButtons(snapshot.data),
                     )
                   ],
-                ),
+                );
+              }),
                 Text(widget.movieCard.overview),
                 Container(margin: const EdgeInsets.only(top: 8.0, bottom: 8.0)),
               ],

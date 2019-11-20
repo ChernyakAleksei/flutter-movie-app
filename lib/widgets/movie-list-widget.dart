@@ -8,12 +8,10 @@ import 'package:achernyak_app/pages/movie-detail-page.dart';
 class MovieListWidget extends StatelessWidget {
   const MovieListWidget({
     Key key,
-    this.listName,
     @required this.stream,
   }) : super(key: key);
 
   final Stream<List<dynamic>> stream;
-  final String listName;
 
   @override
   Widget build(BuildContext context) {
@@ -69,8 +67,7 @@ class MovieListWidget extends StatelessWidget {
       .of(context)
       .push<dynamic>(MaterialPageRoute<dynamic>(builder: (BuildContext context) {
         return MovieDetailsPage(
-          movieCard: movieCardData,
-          listName: listName,
+          movieCard: movieCardData
         );
       }));
   }

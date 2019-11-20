@@ -10,7 +10,10 @@ class WatchedListBloc implements BlocBase {
   WatchedListBloc(){
     _watchListAddController.listen(_handleAddWatch);
     _watchListRemoveController.listen(_handleRemoveWatch);
-    DBProvider.db.getAll('moviesWatched').then((List<MovieCard> list) => _inWatch.add(UnmodifiableListView<MovieCard>(list)));
+    DBProvider.db.getAll('moviesWatched').then((List<MovieCard> list) {
+      _watchList.addAll(list);
+      _inWatch.add(UnmodifiableListView<MovieCard>(list));
+      });
   }
 
   final Set<MovieCard> _watchList = Set<MovieCard>();
@@ -40,11 +43,12 @@ class WatchedListBloc implements BlocBase {
   }
 
   void _handleRemoveWatch(MovieCard movieCard){
+    if(_watchList.toList().indexWhere((MovieCard item) => item.id == movieCard.id) > -1) {
     _watchList.removeWhere((MovieCard item) => item.id == movieCard.id);
     DBProvider.db.delete(movieCard.id, 'moviesWatched');
 
-
     _notify();
+    }
   }
 
   void _notify(){

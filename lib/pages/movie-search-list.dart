@@ -103,7 +103,7 @@ class _MovieSearchListPageState extends State<MovieSearchListPage> {
       splashColor: Colors.red,
       enableFeedback: true,
       child: ListTile(
-        title: Text('${movieCards[index].title} (${movieCards[index].releaseDate.substring(0, 4)})'),
+        title: Text('${movieCards[index].title} (${movieCards[index].releaseDate})'),
       ),
       onTap: () => goToMoviesDetailPage(movieCards[index]),
     ),
